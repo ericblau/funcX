@@ -60,7 +60,7 @@ setup(
     name="globus-compute-sdk",
     version=parse_version(),
     packages=find_namespace_packages(
-        include=["globus-compute-sdk", "globus-compute-sdk.*"]
+        include=["globus_compute_sdk", "globus_compute_sdk.*"]
     ),
     description="Globus Compute: High Performance Function Serving for Science",
     install_requires=REQUIRES,
