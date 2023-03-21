@@ -46,7 +46,7 @@ def test_start_endpoint_blocked(
     responses.add(
         responses.GET,
         fx_addy + "version",
-        json={"api": "1.0.5", "min_ep_version": "1.0.5", "min_sdk_version": "1.0.5"},
+        json={"api": "1.0.5", "min_ep_version": "1.0.5", "min_sdk_version": "0.0.2a0"},
         status=200,
     )
     responses.add(
