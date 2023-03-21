@@ -14,4 +14,3 @@ def internal_auth_client():
     return globus_sdk.NativeAppAuthClient(
         client_id, app_name="Globus Compute (internal client)"
     )
-

@@ -6,9 +6,9 @@ from setuptools import find_packages, setup
 compute_sdk_path = "/Users/lei/glob/funcX/compute_sdk"
 
 REQUIRES = [
-    # "globus-compute-sdk>=2.0.0",
-    f"globus-compute-sdk @ file://localhost/{compute_sdk_path}#egg=compute_sdk"
+    "globus-compute-sdk>=2.0.0a0",
 ]
+
 
 def parse_version():
     # single source of truth for package version
@@ -23,7 +23,6 @@ def parse_version():
     if not version_string:
         raise RuntimeError("Failed to parse version information")
     return version_string
-
 
 
 setup(

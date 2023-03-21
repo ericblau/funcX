@@ -5,8 +5,7 @@ from setuptools import find_packages, setup
 compute_endpoint_path = "/Users/lei/glob/funcX/compute_endpoint"
 
 REQUIRES = [
-    # "globus-compute-endpoint>=2.0.0",
-    f"globus-compute-endpoint @ file://localhost/{compute_endpoint_path}#egg=compute_endpoint"
+    "globus-compute-endpoint>=0.0.0a0",
 ]
 
 version_ns = {}

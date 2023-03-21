@@ -1,4 +1,5 @@
-""" Globus Compute, formerly funcX: Fast function serving for clouds, clusters and supercomputers.
+""" Globus Compute, formerly funcX: Fast function serving for clouds,
+ clusters and supercomputers.
 """
 from funcx.version import __version__ as _version
 
