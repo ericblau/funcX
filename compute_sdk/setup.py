@@ -1,7 +1,7 @@
 import os
 import re
 
-from setuptools import find_namespace_packages, setup
+from setuptools import find_packages, setup
 
 REQUIRES = [
     # request sending and authorization tools
@@ -59,9 +59,7 @@ def parse_version():
 setup(
     name="globus-compute-sdk",
     version=parse_version(),
-    packages=find_namespace_packages(
-        include=["globus-compute-sdk", "globus-compute-sdk.*"]
-    ),
+    packages=find_packages(),
     description="Globus Compute: High Performance Function Serving for Science",
     install_requires=REQUIRES,
     extras_require={
