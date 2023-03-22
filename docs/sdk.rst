@@ -232,7 +232,16 @@ The LoginManager is responsible for serving tokens to the Client as needed. Typi
 
 A custom LoginManager can be used to simply return static tokens and enable programmatic use of the Client.
 
-More details on the Globus Compute login manager prototcol are available `here. <https://github.com/funcx-faas/funcX/blob/main/funcx_sdk/funcx/sdk/login_manager/protocol.py>`_
+.. note::
+    To access the Globus Compute API the scope that needs to be requested from
+    Globus auth is globus_compute_sdk.Client.FUNCXSCOPE, which is:
+
+    .. code::
+
+      https://auth.globus.org/scopes/facd7ccc-c5f4-42aa-916b-a0e270e2c2a9/all
+
+
+More details on the login manager prototcol are available `here. <https://github.com/funcx-faas/funcX/blob/main/compute_sdk/globus_compute_sdk/sdk/login_manager/protocol.py>`_
 
 
 .. code:: python

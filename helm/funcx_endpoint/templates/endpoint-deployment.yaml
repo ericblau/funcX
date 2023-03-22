@@ -28,7 +28,7 @@ spec:
       - name: {{ .Release.Name }}-endpoint
         image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
         command: [ "/bin/bash", "-c", "--" ]
-        args: [ "/home/compute/boot.sh {{ .Release.Name }} {{ .Values.endpointUUID }} {{ .Values.endpointCLIargs }}" ]
+        args: [ "/home/compute/boot.sh {{ coalesce .Values.endpointName .Release.Name }} {{ .Values.endpointUUID }} {{ .Values.endpointCLIargs }}" ]
         tty: true
         stdin: true
         imagePullPolicy: {{ .Values.image.pullPolicy }}
@@ -64,7 +64,11 @@ spec:
           - name: endpoint-config
             mountPath: /compute/config
           - name: endpoint-instance-config
+<<<<<<< HEAD
             mountPath: /compute/{{ .Release.Name }}
+=======
+            mountPath: /funcx/ep_instance
+>>>>>>> main
 
         ports:
           - containerPort: 5000
