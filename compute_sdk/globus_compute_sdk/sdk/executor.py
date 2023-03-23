@@ -44,8 +44,8 @@ def __executor_atexit():
     threading.main_thread().join()
     to_shutdown = list(_REGISTERED_FXEXECUTORS.values())
     while to_shutdown:
-        fxe = to_shutdown.pop()
-        fxe.shutdown()
+        gce = to_shutdown.pop()
+        gce.shutdown()
 
 
 threading.Thread(target=__executor_atexit).start()
@@ -206,8 +206,8 @@ class Executor(concurrent.futures.Executor):
 
         Must be a string.  Set by simple assignment::
 
-            fxe = Executor(endpoint_id="...")
-            fxe.task_group_id = "Some-stored-id"
+            gce = Executor(endpoint_id="...")
+            gce.task_group_id = "Some-stored-id"
 
         This is typically used when reattaching to a previously initiated set of tasks.
         See `reload_tasks()`_ for more information.
@@ -299,8 +299,8 @@ class Executor(concurrent.futures.Executor):
         Example use::
 
             >>> def add(a: int, b: int) -> int: return a + b
-            >>> fxe = Executor(endpoint_id="some-ep-id")
-            >>> fut = fxe.submit(add, 1, 2)
+            >>> gce = Executor(endpoint_id="some-ep-id")
+            >>> fut = gce.submit(add, 1, 2)
             >>> fut.result()    # wait (block) until result is received from remote
             3
 
@@ -345,8 +345,8 @@ class Executor(concurrent.futures.Executor):
                 # ... function logic ...
                 return ["some", "result"]
 
-            fxe = Executor()
-            fn_id = fxe.register_function(some_processor)
+            gce = Executor()
+            fn_id = gce.register_function(some_processor)
             print(f"Function registered successfully.\\nFunction ID: {fn_id}")
 
             # Example output:
@@ -388,8 +388,8 @@ class Executor(concurrent.futures.Executor):
             msg = (
                 "No endpoint_id set.  Did you forget to set it at construction?\n"
                 "  Hint:\n\n"
-                "    fxe = Executor(endpoint_id=<ep_id>)\n"
-                "    fxe.endpoint_id = <ep_id>    # alternative"
+                "    gce = Executor(endpoint_id=<ep_id>)\n"
+                "    gce.endpoint_id = <ep_id>    # alternative"
             )
             self.shutdown(wait=False, cancel_futures=True)
             raise ValueError(msg)
