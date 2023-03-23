@@ -19,12 +19,12 @@ RUN python -m pip install -U pip
 RUN python -m pip install kubernetes
 RUN python -m pip install --no-binary :all: --force-reinstall pyzmq
 
-COPY globus_compute_sdk /opt/compute/globus_compute_sdk/
-WORKDIR /opt/compute/globus_compute_sdk
+COPY compute_sdk /opt/compute/compute_sdk/
+WORKDIR /opt/compute/compute_sdk
 RUN python -m pip install .
 
-COPY globus_compute_endpoint /opt/compute/globus_compute_endpoint
-WORKDIR /opt/compute/globus_compute_endpoint
+COPY compute_endpoint /opt/compute/compute_endpoint
+WORKDIR /opt/compute/compute_endpoint
 RUN python -m pip install .
 
 # Undo local-dev ministrations
