@@ -36,23 +36,23 @@ def ohai():
 
 
 @pytest.mark.skipif(sdk_version.release < (1, 0, 5), reason="batch.add iface updated")
-def test_batch(gcc, endpoint):
+def test_batch(compute_client, endpoint):
     """Test batch submission and get_batch_result"""
 
-    double_fn_id = gcc.register_function(double)
+    double_fn_id = compute_client.register_function(double)
 
     inputs = list(range(10))
-    batch = gcc.create_batch()
+    batch = compute_client.create_batch()
 
     for x in inputs:
         batch.add(double_fn_id, endpoint, args=(x,))
 
-    batch_res = gcc.batch_run(batch)
+    batch_res = compute_client.batch_run(batch)
 
     total = 0
     for _i in range(12):
         time.sleep(5)
-        results = gcc.get_batch_result(batch_res)
+        results = compute_client.get_batch_result(batch_res)
         try:
             total = sum(results[tid]["result"] for tid in results)
             break
@@ -62,14 +62,14 @@ def test_batch(gcc, endpoint):
     assert total == 2 * (sum(inputs)), "Batch run results do not add up"
 
 
-def test_wait_on_new_hello_world_func(gcc, endpoint):
-    func_id = gcc.register_function(ohai)
-    task_id = gcc.run(endpoint_id=endpoint, function_id=func_id)
+def test_wait_on_new_hello_world_func(compute_client, endpoint):
+    func_id = compute_client.register_function(ohai)
+    task_id = compute_client.run(endpoint_id=endpoint, function_id=func_id)
 
     got_result = False
     for _ in range(30):
         try:
-            result = gcc.get_result(task_id)
+            result = compute_client.get_result(task_id)
             got_result = True
         except TaskPending:
             time.sleep(1)
@@ -78,10 +78,10 @@ def test_wait_on_new_hello_world_func(gcc, endpoint):
     assert result == "ohai"
 
 
-def test_executor(gcc, endpoint, tutorial_function_id):
+def test_executor(compute_client, endpoint, tutorial_function_id):
     """Test using Executor to retrieve results."""
 
-    url = f"{gcc.funcx_service_address}/version"
+    url = f"{compute_client.funcx_service_address}/version"
     res = requests.get(url)
 
     assert res.status_code == 200, f"Received {res.status_code} instead!"
@@ -97,7 +97,7 @@ def test_executor(gcc, endpoint, tutorial_function_id):
     num_tasks = 10
     submit_count = 2  # we've had at least one bug that prevented executor re-use
 
-    with Executor(endpoint_id=endpoint, funcx_client=gcc) as gce:
+    with Executor(endpoint_id=endpoint, funcx_client=compute_client) as gce:
         for _ in range(submit_count):
             futures = [
                 gce.submit_to_registered_function(tutorial_function_id)
