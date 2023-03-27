@@ -40,7 +40,7 @@ results. Globus Compute securely communicates with remote endpoints, waits for r
 to become available, and can even retry execution upon failure. Globus Compute stores results (or
 errors) in the cloud-hosted service until they are retrieved by the user.
 
-.. image:: _static/images/funcX-model.png
+.. image:: _static/images/compute-model.png
 
 
 Using Globus Compute

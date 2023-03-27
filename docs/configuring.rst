@@ -92,7 +92,7 @@ using the ``CobaltProvider``. This configuration assumes that the script is bein
 Polaris (ALCF)
 ^^^^^^^^^^^^^^
 
-.. image:: images/ALCF_Polaris.jpeg
+.. image:: _static/images/ALCF_Polaris.jpeg
 
 The following snippet shows an example configuration for executing on Argonne Leadership Computing Facility's
 **Polaris** cluster. This example uses the ``HighThroughputExecutor`` and connects to Polaris's PBS scheduler

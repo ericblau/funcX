@@ -44,7 +44,9 @@ pygments_dark_style = "monokai"  # this is a furo-specific option
 html_show_sourcelink = True
 html_theme = "furo"
 html_static_path = ["_static"]
+
+# Potentially different pngs for light/dark in the future
 html_theme_options = {
     "light_logo": "images/globus-300x300-blue.png",
-    "dark_logo": "images/globus-300x300-blue.png",
+    "dark_logo": "images/compute-vertical.svg",
 }
