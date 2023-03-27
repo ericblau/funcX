@@ -2,9 +2,9 @@ import requests
 from packaging.version import Version
 
 
-def test_web_service(gcc, endpoint, compute_test_config):
+def test_web_service(compute_client, endpoint, compute_test_config):
     """This test checks 1) web-service is online, 2) version of the web-service"""
-    service_address = gcc.funcx_service_address
+    service_address = compute_client.funcx_service_address
 
     response = requests.get(f"{service_address}/version")
 
@@ -27,15 +27,15 @@ def say_hello():
     return "Hello World!"
 
 
-def test_simple_function(gcc):
+def test_simple_function(compute_client):
     """Test whether we can register a function"""
-    func_uuid = gcc.register_function(say_hello)
+    func_uuid = compute_client.register_function(say_hello)
     assert func_uuid is not None, "Invalid function uuid returned"
 
 
-def test_ep_status(gcc, endpoint):
+def test_ep_status(compute_client, endpoint):
     """Test whether the tutorial EP is online and reporting status"""
-    response = gcc.get_endpoint_status(endpoint)
+    response = compute_client.get_endpoint_status(endpoint)
 
     assert (
         response["status"] == "online"
