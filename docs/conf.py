@@ -45,6 +45,6 @@ html_show_sourcelink = True
 html_theme = "furo"
 html_static_path = ["_static"]
 html_theme_options = {
-    "light_logo": "images/funcX-light-cropped.png",
-    "dark_logo": "images/funcX-dark-cropped.png",
+    "light_logo": "images/globus-300x300-blue.png",
+    "dark_logo": "images/globus-300x300-blue.png",
 }
