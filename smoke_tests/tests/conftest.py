@@ -175,8 +175,8 @@ def compute_test_config(pytestconfig, compute_test_config_name):
     api_uri = pytestconfig.getoption("--service-address")
 
     # env vars to allow use of client creds in GitHub Actions
-    api_client_id = os.getenv("COMPUTE_SMOKE_CLIENT_ID")
-    api_client_secret = os.getenv("COMPUTE_SMOKE_CLIENT_SECRET")
+    api_client_id = os.getenv("FUNCX_SMOKE_CLIENT_ID")
+    api_client_secret = os.getenv("FUNCX_SMOKE_CLIENT_SECRET")
     if ws_uri:
         client_args["results_ws_uri"] = ws_uri
     if api_uri:
