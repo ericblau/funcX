@@ -291,7 +291,7 @@ def _do_logout_endpoints(
     return tokens_revoked, error_msg
 
 
-def read_config(endpoint_dir: pathlib.Path) -> Config:
+def read_config(endpoint_dir: pathlib.Path, warn_funcx_imports: bool = True) -> Config:
     endpoint_name = endpoint_dir.name
 
     try:
@@ -333,6 +333,24 @@ def read_config(endpoint_dir: pathlib.Path) -> Config:
             "\nHas the configuration file been corrupted or modified incorrectly?\n"
         )
         raise ClickException(msg) from err
+
+    except ModuleNotFoundError as err:
+        # Catch specific error when old config.py references funcx_endpoint
+        if warn_funcx_imports and "No module named 'funcx_endpoint." in err.msg:
+            msg = (
+                f"{conf_path} contains import statements from a previously "
+                "configured endpoint that use the (deprecated) "
+                "funcx-endpoint library. Please update the imports to use "
+                "globus_compute_endpoint.\n\ni.e. \n"
+                "  from funcx_endpoint.endpoint.utils.config -> "
+                "from globus_compute_endpoint.endpoint.utils.config\n"
+                "  from funcx_endpoint.executors -> "
+                "from globus_compute_endpoint.executors"
+            )
+            raise ClickException(msg) from err
+        else:
+            print(f"({err.msg}")
+            raise
 
     except Exception:
         log.exception(
