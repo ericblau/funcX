@@ -160,7 +160,7 @@ def test_stop_remote_endpoint(
             ("abc\n"
              "bcd"
              "cef"),
-            True,
+            False,
             False,
             True,
             False,
