@@ -1,3 +1,5 @@
+import warnings
+
 from globus_compute_endpoint.executors import HighThroughputExecutor
 from globus_compute_endpoint.version import DEPRECATION_FUNCX_ENDPOINT
 
