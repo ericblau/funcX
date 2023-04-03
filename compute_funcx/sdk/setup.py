@@ -6,7 +6,7 @@ from setuptools import find_packages, setup
 compute_sdk_path = "/Users/lei/glob/funcX/compute_sdk"
 
 REQUIRES = [
-    "globus-compute-sdk>=2.0.0a0",
+    "globus-compute-sdk>=2.0.0a1",
 ]
 
 
