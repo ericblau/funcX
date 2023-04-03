@@ -5,15 +5,15 @@ Upgrading from funcX SDK and funcx-endpoint
 Background
 ^^^^^^^^^^
 
-abcd
+Placeholder for background text of rebranding funcX as Globus Compute
 
 funcX SDK
 ^^^^^^^^^
 
-defg
+Placeholder for detailed steps and notes when upgrading the SDK.
 
 funcX Endpoint
 ^^^^^^^^^^^^^^
 
-ghij
+Placeholder for detailed steps and notes when upgrading the endpoint.
 
