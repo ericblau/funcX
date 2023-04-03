@@ -427,17 +427,17 @@ def read_config(endpoint_dir: pathlib.Path, warn_funcx_imports: bool = True) -> 
         if warn_funcx_imports and "No module named 'funcx_endpoint." in err.msg:
             msg = (
                 f"{conf_path} contains import statements from a previously "
-                "configured endpoint that use the (deprecated) "
-                "funcx-endpoint library. Please update the imports to use "
-                "globus_compute_endpoint.\n\ni.e. \n"
-                "  from funcx_endpoint.endpoint.utils.config -> "
+                "configured endpoint that uses the (deprecated) "
+                "funcx-endpoint library. Please update the imports to reference "
+                "globus_compute_endpoint.\n\ni.e.\n"
+                "    from funcx_endpoint.endpoint.utils.config -> "
                 "from globus_compute_endpoint.endpoint.utils.config\n"
-                "  from funcx_endpoint.executors -> "
+                "    from funcx_endpoint.executors -> "
                 "from globus_compute_endpoint.executors\n"
                 "\n"
                 "You can also use the command "
-                "`globus-compute-endpoint update_funcx_config <endpoint_name>` "
-                "to update the imports\n"
+                "`globus-compute-endpoint update_funcx_config [endpoint_name]` "
+                "to update them\n"
             )
             raise ClickException(msg) from err
         else:
