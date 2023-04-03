@@ -7,7 +7,6 @@ import os.path
 import pathlib
 import shutil
 import sys
-import traceback
 import uuid
 
 import click
@@ -370,8 +369,7 @@ def _upgrade_funcx_imports_in_config(name: str, force=False) -> str:
     except ClickException:
         raise
     except Exception as err:
-        msg = f"Unknown error {err} attempting to reformat config.py in {ep_dir}"
-        traceback.print_tb(err)
+        msg = f"Unknown Exception {err} attempting to reformat config.py in {ep_dir}"
         raise ClickException(msg) from err
 
 
