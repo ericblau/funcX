@@ -5,6 +5,15 @@ from packaging.version import Version
 # see https://packaging.python.org/en/latest/single_source_version/
 __version__ = "2.0.0a0"
 
+DEPRECATION_FUNCX = """
+The funcX SDK has been renamed to Globus Compute SDK and the new package is
+available on PyPI:
+    https://pypi.org/project/globus-compute-sdk/
+
+Please consider upgrading to Globus Compute.  More information can be found at:
+    https://globus-compute.readthedocs.io/en/latest/funcx_upgrade.html
+"""
+
 
 def compare_versions(
     current: str, min_version: str, *, package_name: str = "funcx"

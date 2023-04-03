@@ -3,6 +3,7 @@
 """
 import warnings
 
+from funcx.version import DEPRECATION_FUNCX
 from funcx.version import __version__ as _version
 
 __author__ = "The Globus Compute team"
@@ -11,6 +12,6 @@ __version__ = _version
 from globus_compute_sdk import Client as FuncXClient
 from globus_compute_sdk import Executor as FuncXExecutor
 
-warnings.warn("This package is deprecated XXX TBD")
+warnings.warn(DEPRECATION_FUNCX)
 
 __all__ = ("FuncXExecutor", "FuncXClient")

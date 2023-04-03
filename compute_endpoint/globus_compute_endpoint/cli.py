@@ -18,6 +18,7 @@ from .endpoint.endpoint import Endpoint
 from .endpoint.endpoint_manager import EndpointManager
 from .endpoint.utils.config import Config
 from .logging_config import setup_logging
+from .version import DEPRECATION_FUNCX_ENDPOINT
 
 log = logging.getLogger(__name__)
 
@@ -193,8 +194,8 @@ def configure_endpoint(
     Drops a config.py template into the funcx configs directory.
     The template usually goes to ~/.funcx/<ENDPOINT_NAME>/config.py
     """
-    funcx_dir = get_config_dir()
-    ep_dir = funcx_dir / name
+    compute_dir = get_config_dir()
+    ep_dir = compute_dir / name
     Endpoint.configure_endpoint(ep_dir, endpoint_config, multi_tenant)
 
 
@@ -272,8 +273,8 @@ def _do_logout_endpoints(
     Returns False, error_msg if token revocation was not done
     """
     if running_endpoints is None:
-        funcx_dir = get_config_dir()
-        running_endpoints = Endpoint.get_running_endpoints(funcx_dir)
+        compute_dir = get_config_dir()
+        running_endpoints = Endpoint.get_running_endpoints(compute_dir)
     tokens_revoked = False
     error_msg = None
     if running_endpoints and not force:
@@ -554,8 +555,8 @@ def restart_endpoint(*, name: str, **_kwargs):
 @common_options
 def list_endpoints():
     """List all available endpoints"""
-    funcx_dir = get_config_dir()
-    Endpoint.print_endpoint_table(funcx_dir)
+    compute_dir = get_config_dir()
+    Endpoint.print_endpoint_table(compute_dir)
 
 
 @app.command("delete")
@@ -583,6 +584,12 @@ def delete_endpoint(*, name: str, force: bool, yes: bool):
 
 def cli_run():
     """Entry point for setuptools to point to"""
+    app()
+
+
+def cli_run_funcx():
+    """Entry point that prints a custom message. i.e. deprecation warnings"""
+    print(DEPRECATION_FUNCX_ENDPOINT)
     app()
 
 
