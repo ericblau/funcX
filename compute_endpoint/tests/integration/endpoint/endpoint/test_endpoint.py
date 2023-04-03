@@ -1,6 +1,4 @@
 import os.path
-
-from click import ClickException
 import pathlib
 import uuid
 from unittest.mock import Mock, patch
@@ -9,12 +7,13 @@ import globus_compute_sdk.sdk.client
 import globus_compute_sdk.sdk.login_manager
 import pytest
 import responses
+from click import ClickException
 from click.testing import CliRunner
 from globus_compute_endpoint.cli import (
     _do_logout_endpoints,
     _do_stop_endpoint,
-    app,
     _upgrade_funcx_imports_in_config,
+    app,
 )
 from globus_compute_endpoint.endpoint import endpoint
 from globus_compute_endpoint.endpoint.utils.config import Config
@@ -145,6 +144,7 @@ def test_stop_remote_endpoint(
     _do_stop_endpoint(name="abc-endpoint", remote=True)
     assert mock_stop_endpoint.called
 
+
 @patch(
     "globus_compute_endpoint.endpoint.endpoint.Endpoint.get_endpoint_id",
     return_value="abc-uuid",
@@ -157,18 +157,14 @@ def test_stop_remote_endpoint(
     "cur_config",
     [
         [
-            ("abc\n"
-             "bcd"
-             "cef"),
+            ("abc\n" "bcd" "cef"),
             False,
             False,
             True,
             False,
         ],
         [
-            ("abc\n"
-             "bcd"
-             "cef"),
+            ("abc\n" "bcd" "cef"),
             False,
             False,
             True,
@@ -176,18 +172,18 @@ def test_stop_remote_endpoint(
         ],
         [
             (
-                    "from funcx_endpoint.endpoint.utils.config import Config\n"
-                    "from funcx_endpoint.executors import HighThroughputExecutor\n"
-                    "from parsl.providers import LocalProvider\n"
-                    "\n"
-                    "config = Config(\n"
-                    "    executors=[\n"
-                    "        HighThroughputExecutor(\n"
-                    "            provider=LocalProvider(\n"
-                    "                init_blocks=1,\n"
-                    "                min_blocks=0,\n"
-                    "                max_blocks=1,\n"
-                    "),\n"
+                "from funcx_endpoint.endpoint.utils.config import Config\n"
+                "from funcx_endpoint.executors import HighThroughputExecutor\n"
+                "from parsl.providers import LocalProvider\n"
+                "\n"
+                "config = Config(\n"
+                "    executors=[\n"
+                "        HighThroughputExecutor(\n"
+                "            provider=LocalProvider(\n"
+                "                init_blocks=1,\n"
+                "                min_blocks=0,\n"
+                "                max_blocks=1,\n"
+                "),\n"
             ),
             False,
             True,
@@ -196,9 +192,9 @@ def test_stop_remote_endpoint(
         ],
         [
             (
-                    "from funcx_endpoint.endpoint.utils.config import Config\n"
-                    "from funcx_endpoint.executors import HighThroughputExecutor\n"
-                    "from parsl.providers import LocalProvider\n"
+                "from funcx_endpoint.endpoint.utils.config import Config\n"
+                "from funcx_endpoint.executors import HighThroughputExecutor\n"
+                "from parsl.providers import LocalProvider\n"
             ),
             False,
             True,
@@ -207,9 +203,9 @@ def test_stop_remote_endpoint(
         ],
         [
             (
-                    "from funcx_endpoint.endpoint.utils.config import Config\n"
-                    "from funcx_endpoint.executors import HighThroughputExecutor\n"
-                    "from parsl.providers import LocalProvider\n"
+                "from funcx_endpoint.endpoint.utils.config import Config\n"
+                "from funcx_endpoint.executors import HighThroughputExecutor\n"
+                "from parsl.providers import LocalProvider\n"
             ),
             False,
             True,
@@ -218,18 +214,18 @@ def test_stop_remote_endpoint(
         ],
         [
             (
-                    "def abc():"
-                    "    from funcx_endpoint.endpoint.utils.config import Config\n"
-                    "    from funcx_endpoint.executors import HighThroughputExecutor\n"
-                    "    from parsl.providers import LocalProvider\n"
-                    "    return 'hello'\n"
+                "def abc():"
+                "    from funcx_endpoint.endpoint.utils.config import Config\n"
+                "    from funcx_endpoint.executors import HighThroughputExecutor\n"
+                "    from parsl.providers import LocalProvider\n"
+                "    return 'hello'\n"
             ),
             False,
             False,
             False,
             False,
         ],
-    ]
+    ],
 )
 def test_endpoint_update_funcx(mock_get_id, mock_get_conf, fs, cur_config):
     file_content, should_raise, modified, has_bak, do_force = cur_config
@@ -249,12 +245,12 @@ def test_endpoint_update_funcx(mock_get_id, mock_get_conf, fs, cur_config):
             assert os.path.exists(ep_dir / "config.py.bak")
         else:
             assert "No funcX import statements" in msg
-        with open(ep_dir / "config.py", "r") as f:
+        with open(ep_dir / "config.py") as f:
             for line in f.readlines():
                 assert not line.startswith("from funcx_endpoint.")
     except ClickException as e:
         if should_raise:
             if has_bak and not do_force:
-                assert 'Rename it or use' in str(e)
+                assert "Rename it or use" in str(e)
         else:
             assert AssertionError(f"Unexpected exception: {e}")

@@ -299,6 +299,7 @@ FUNCX_COMPUTE_IMPORT_UPDATES = {
     "from funcx_endpoint.executors": "from globus_compute_endpoint.executors",  # noqa E501
 }
 
+
 def _upgrade_funcx_imports_in_config(name: str, force=False) -> str:
     """
     This only modifies unindented import lines, as are in the original
@@ -316,7 +317,7 @@ def _upgrade_funcx_imports_in_config(name: str, force=False) -> str:
 
     try:
         # Scan config.py first in case it's a no-op
-        with open(old_config, 'r') as f:
+        with open(old_config) as f:
             lines = f.readlines()
         reformatted_count = 0
         output_lines = []
@@ -339,18 +340,22 @@ def _upgrade_funcx_imports_in_config(name: str, force=False) -> str:
         remove_backup = False
         if os.path.exists(config_backup):
             if not force:
-                msg = (f"{config_backup} already exists.\n"
-                       "Rename it or use the --force flag to update config.")
+                msg = (
+                    f"{config_backup} already exists.\n"
+                    "Rename it or use the --force flag to update config."
+                )
                 raise ClickException(msg)
             if os.path.isdir(config_backup):
-                msg = (f"{config_backup} is a directory.\n"
-                       "Rename it before proceeding with config update.")
+                msg = (
+                    f"{config_backup} is a directory.\n"
+                    "Rename it before proceeding with config update."
+                )
                 raise ClickException(msg)
             remove_backup = True
 
         # Write to temporary file in case of unexpected file errors
         tmp_output_path = ep_dir / ("config.py." + uuid.uuid4().hex)
-        with open(tmp_output_path.name, 'w') as f:
+        with open(tmp_output_path.name, "w") as f:
             for line in output_lines:
                 f.write(line)
         if remove_backup:
@@ -446,8 +451,6 @@ def read_config(endpoint_dir: pathlib.Path, warn_funcx_imports: bool = True) -> 
             "https://funcx.readthedocs.io/en/latest/endpoints.html#configuring-funcx"
         )
         raise
-
-
 
 
 def _do_start_endpoint(
