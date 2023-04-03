@@ -3,8 +3,12 @@ from __future__ import annotations
 import importlib.util
 import json
 import logging
+import os.path
 import pathlib
+import shutil
 import sys
+import traceback
+import uuid
 
 import click
 from click import ClickException
@@ -291,6 +295,86 @@ def _do_logout_endpoints(
     return tokens_revoked, error_msg
 
 
+FUNCX_COMPUTE_IMPORT_UPDATES = {
+    "from funcx_endpoint.endpoint.utils.config": "from globus_compute_endpoint.endpoint.utils.config",  # noqa E501
+    "from funcx_endpoint.executors": "from globus_compute_endpoint.executors",  # noqa E501
+}
+
+def _upgrade_funcx_imports_in_config(name: str, force=False) -> str:
+    """
+    This only modifies unindented import lines, as are in the original
+    config.py.  Indented matching lines are user created and would have to be
+    updated manually by the user.
+
+    The force flag will overwrite an existing (non-directory) config.py.bak
+
+    This method uses a randomly generated intermediate output file in case
+    there are any permission or unforeseen file system issues
+    """
+    ep_dir = get_config_dir() / name
+    old_config = ep_dir / "config.py"
+    config_backup = ep_dir / "config.py.bak"
+
+    try:
+        # Scan config.py first in case it's a no-op
+        with open(old_config, 'r') as f:
+            lines = f.readlines()
+        reformatted_count = 0
+        output_lines = []
+        if lines:
+            for line in lines:
+                modified_line = False
+                for k, v in FUNCX_COMPUTE_IMPORT_UPDATES.items():
+                    if line.startswith(k):
+                        modified_line = True
+                        output_lines.append(line.replace(k, v, 1))
+                        break
+                if not modified_line:
+                    output_lines.append(line)
+                else:
+                    reformatted_count += 1
+        format_msg = f"No funcX import statements found in config.py for {name}"
+        if reformatted_count == 0:
+            return format_msg
+
+        remove_backup = False
+        if os.path.exists(config_backup):
+            if not force:
+                msg = (f"{config_backup} already exists.\n"
+                       "Rename it or use the --force flag to update config.")
+                raise ClickException(msg)
+            if os.path.isdir(config_backup):
+                msg = (f"{config_backup} is a directory.\n"
+                       "Rename it before proceeding with config update.")
+                raise ClickException(msg)
+            remove_backup = True
+
+        # Write to temporary file in case of unexpected file errors
+        tmp_output_path = ep_dir / ("config.py." + uuid.uuid4().hex)
+        with open(tmp_output_path.name, 'w') as f:
+            for line in output_lines:
+                f.write(line)
+        if remove_backup:
+            os.remove(config_backup)
+        shutil.move(old_config, config_backup)  # Preserve file timestamp
+        os.rename(tmp_output_path.name, old_config)
+        format_msg = (
+            f"{reformatted_count} lines were modified for endpoint {name}\n"
+            f"  The previous config has been renamed to {config_backup}"
+        )
+        return format_msg
+
+    except FileNotFoundError as err:
+        msg = f"No config.py was found for endpoint ({name}) in {ep_dir}"
+        raise ClickException(msg) from err
+    except ClickException:
+        raise
+    except Exception as err:
+        msg = f"Unknown error {err} attempting to reformat config.py in {ep_dir}"
+        traceback.print_tb(err)
+        raise ClickException(msg) from err
+
+
 def read_config(endpoint_dir: pathlib.Path, warn_funcx_imports: bool = True) -> Config:
     endpoint_name = endpoint_dir.name
 
@@ -345,11 +429,15 @@ def read_config(endpoint_dir: pathlib.Path, warn_funcx_imports: bool = True) -> 
                 "  from funcx_endpoint.endpoint.utils.config -> "
                 "from globus_compute_endpoint.endpoint.utils.config\n"
                 "  from funcx_endpoint.executors -> "
-                "from globus_compute_endpoint.executors"
+                "from globus_compute_endpoint.executors\n"
+                "\n"
+                "You can also use the command "
+                "`globus-compute-endpoint update_funcx_config <endpoint_name>` "
+                "to update the imports\n"
             )
             raise ClickException(msg) from err
         else:
-            print(f"({err.msg}")
+            log.exception(err.msg)
             raise
 
     except Exception:
@@ -360,6 +448,8 @@ def read_config(endpoint_dir: pathlib.Path, warn_funcx_imports: bool = True) -> 
             "https://funcx.readthedocs.io/en/latest/endpoints.html#configuring-funcx"
         )
         raise
+
+
 
 
 def _do_start_endpoint(
@@ -420,6 +510,23 @@ def _do_start_endpoint(
 def stop_endpoint(*, name: str, remote: bool):
     """Stops an endpoint using the pidfile"""
     _do_stop_endpoint(name=name, remote=remote)
+
+
+@app.command("update_funcx_config")
+@name_arg
+@click.option(
+    "--force",
+    is_flag=True,
+    default=False,
+    help="update config and backup to config.py.bak even if it already exists",
+)
+def update_funcx_endpoint_config(*, name: str, force: bool):
+    """
+    Update imports file from funcx_endpoint.* to globus_compute_endpoint.*
+
+    Either should raise ClickException or returns modification result message
+    """
+    print(_upgrade_funcx_imports_in_config(name=name, force=force))
 
 
 def _do_stop_endpoint(*, name: str, remote: bool = False) -> None:
