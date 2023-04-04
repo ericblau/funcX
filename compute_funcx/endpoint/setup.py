@@ -33,7 +33,7 @@ setup(
     keywords=["funcX", "FaaS", "Function Serving"],
     entry_points={
         "console_scripts": [
-            "funcx-endpoint=globus_compute_endpoint.cli:cli_run_with",
+            "funcx-endpoint=globus_compute_endpoint.cli:cli_run_funcx",
             "funcx-interchange"
             "=globus_compute_endpoint.executors.high_throughput.interchange:cli_run",
             "funcx-manager"
