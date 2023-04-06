@@ -184,11 +184,6 @@ class LoginManager:
             authorizer=self._get_authorizer(AuthScopes.resource_server)
         )
 
-    def get_search_client(self) -> globus_sdk.SearchClient:
-        return globus_sdk.SearchClient(
-            authorizer=self._get_authorizer(SearchScopes.resource_server)
-        )
-
     def get_web_client(
         self, *, base_url: str | None = None, app_name: str | None = None
     ) -> WebClient:

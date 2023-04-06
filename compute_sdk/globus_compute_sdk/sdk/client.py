@@ -20,7 +20,6 @@ from globus_compute_sdk.sdk._environments import (
 )
 from globus_compute_sdk.sdk.asynchronous.compute_task import ComputeTask
 from globus_compute_sdk.sdk.asynchronous.ws_polling_task import WebSocketPollingTask
-from globus_compute_sdk.sdk.search import SearchHelper
 from globus_compute_sdk.sdk.web_client import FunctionRegistrationData
 from globus_compute_sdk.serialize import ComputeSerializer
 from globus_compute_sdk.version import __version__, compare_versions
