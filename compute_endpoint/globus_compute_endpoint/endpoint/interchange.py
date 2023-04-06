@@ -26,10 +26,6 @@ from globus_compute_common.messagepack.message_types import (
     ResultErrorDetails,
     Task,
 )
-from parsl.version import VERSION as PARSL_VERSION
-
-import globus_compute_endpoint.endpoint.utils.config
-from globus_compute_sdk import __version__ as funcx_sdk_version
 from globus_compute_endpoint import __version__ as funcx_endpoint_version
 from globus_compute_endpoint.endpoint.messages_compat import (
     convert_to_internaltask,
