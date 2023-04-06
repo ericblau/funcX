@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+import difflib
 import importlib.util
 import json
 import logging
-import os.path
 import pathlib
 import shutil
 import sys
@@ -313,61 +313,53 @@ def _upgrade_funcx_imports_in_config(name: str, force=False) -> str:
     there are any permission or unforeseen file system issues
     """
     ep_dir = get_config_dir() / name
-    old_config = ep_dir / "config.py"
+    config_path = ep_dir / "config.py"
     config_backup = ep_dir / "config.py.bak"
 
     try:
-        # Scan config.py first in case it's a no-op
-        with open(old_config) as f:
-            lines = f.readlines()
-        reformatted_count = 0
-        output_lines = []
-        if lines:
-            for line in lines:
-                modified_line = False
-                for k, v in FUNCX_COMPUTE_IMPORT_UPDATES.items():
-                    if line.startswith(k):
-                        modified_line = True
-                        output_lines.append(line.replace(k, v, 1))
-                        break
-                if not modified_line:
-                    output_lines.append(line)
-                else:
-                    reformatted_count += 1
-        format_msg = f"No funcX import statements found in config.py for {name}"
-        if reformatted_count == 0:
-            return format_msg
+        config_text = config_path.read_text()
+        upd_config_text = config_text
 
-        remove_backup = False
-        if os.path.exists(config_backup):
-            if not force:
-                msg = (
-                    f"{config_backup} already exists.\n"
-                    "Rename it or use the --force flag to update config."
-                )
-                raise ClickException(msg)
-            if os.path.isdir(config_backup):
-                msg = (
-                    f"{config_backup} is a directory.\n"
-                    "Rename it before proceeding with config update."
-                )
-                raise ClickException(msg)
-            remove_backup = True
+        for original, repl in FUNCX_COMPUTE_IMPORT_UPDATES.items():
+            upd_config_text = upd_config_text.replace(original, repl)
 
-        # Write to temporary file in case of unexpected file errors
+        if upd_config_text == config_text:
+            return f"No funcX import statements found in config.py for {name}"
+
+        change_diff = "".join(
+            difflib.unified_diff(
+                config_text.splitlines(keepends=True),
+                upd_config_text.splitlines(keepends=True),
+                n=3,  # Typical 3 lines of context
+            )
+        )
+
+        if config_backup.exists() and not force:
+            msg = (
+                f"{config_backup} already exists.\n"
+                "Rename it or use the --force flag to update config."
+            )
+            raise ClickException(msg)
+        elif config_backup.is_dir():
+            msg = (
+                f"{config_backup} is a directory.\n"
+                "Rename it before proceeding with config update."
+            )
+            raise ClickException(msg)
+
+        # Write to temporary file in case of issues
         tmp_output_path = ep_dir / ("config.py." + uuid.uuid4().hex)
-        with open(tmp_output_path.name, "w") as f:
-            for line in output_lines:
-                f.write(line)
-        if remove_backup:
-            os.remove(config_backup)
-        shutil.move(old_config, config_backup)  # Preserve file timestamp
-        os.rename(tmp_output_path.name, old_config)
-        format_msg = (
-            f"{reformatted_count} lines were modified for endpoint {name}\n"
+        tmp_output_path.write_text(upd_config_text)
+
+        # Rename files last, as it's the least likely to err
+        config_backup.unlink(missing_ok=True)
+        shutil.move(config_path, config_backup)  # Preserve file timestamp
+        shutil.move(tmp_output_path, config_path)
+
+        return (
+            f"Applied following diff for endpoint {name}:\n{change_diff}\n\n"
             f"  The previous config has been renamed to {config_backup}"
         )
-        return format_msg
 
     except FileNotFoundError as err:
         msg = f"No config.py was found for endpoint ({name}) in {ep_dir}"
