@@ -20,7 +20,7 @@ The Globus Compute Python SDK provides programming abstractions for interacting 
 The Globus Compute SDK exposes a ``Client`` object for all interactions with the Globus Compute service.
 In order to use the Globus Compute service you must first authenticate using one of hundreds of supported identity provides (e.g., your institution, ORCID, Google).
 
-As part of the authenticaiton process you must grant permission for Globus Compute to access your identity information (to retrieve your email address), Globus Groups management access (to share functions and endpoints), and Globus Search (to discover functions and endpoints).
+As part of the authenticaiton process you must grant permission for Globus Compute to access your identity information (to retrieve your email address), Globus Groups management access (to share endpoints).
 
 .. code-block:: python
 

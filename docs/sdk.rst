@@ -247,7 +247,7 @@ More details on the Globus Compute login manager prototcol are available `here. 
 .. code:: python
 
   import globus_sdk
-  from globus_sdk.scopes import AuthScopes, SearchScopes
+  from globus_sdk.scopes import AuthScopes
   from globus_compute_sdk.sdk.login_manager import LoginManager
   from globus_compute_sdk.sdk.web_client import WebClient
   from globus_compute_sdk import Client
@@ -284,13 +284,11 @@ More details on the Globus Compute login manager prototcol are available `here. 
 
   # Create authorizers from existing tokens
   compute_auth = globus_sdk.AccessTokenAuthorizer(compute_token)
-  search_auth = globus_sdk.AccessTokenAuthorizer(search_token)
   openid_auth = globus_sdk.AccessTokenAuthorizer(openid_token)
 
   # Create a new login manager and use it to create a client
   compute_login_manager = LoginManager(
       authorizers={Client.FUNCX_SCOPE: compute_auth,
-                   SearchScopes.all: search_auth,
                    AuthScopes.openid: openid_auth}
   )
 

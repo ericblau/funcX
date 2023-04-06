@@ -60,7 +60,6 @@ class FunctionRegistrationData:
         self.description = description
         self.public = public
         self.group = group
-        self.searchable = searchable
 
     def to_dict(self):
         return {
@@ -71,7 +70,6 @@ class FunctionRegistrationData:
             "description": self.description,
             "public": self.public,
             "group": self.group,
-            "searchable": self.searchable,
         }
 
     def __str__(self):

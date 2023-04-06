@@ -13,7 +13,6 @@ from globus_sdk import (
     AccessTokenAuthorizer,
     AuthClient,
     ConfidentialAppAuthClient,
-    SearchClient,
 )
 
 # the non-tutorial endpoint will be required, with the following priority order for
@@ -34,7 +33,7 @@ _CONFIGS = {
         # assert versions are as expected on dev
         "forwarder_min_version": "0.3.5",
         "api_min_version": "0.3.5",
-        # This fn is public and searchable
+        # This fn is public
         "public_hello_fn_uuid": "f84351f9-6f82-45d8-8eca-80d8f73645be",
         "endpoint_uuid": "2238617a-8756-4030-a8ab-44ffb1446092",
     },
@@ -45,7 +44,7 @@ _CONFIGS = {
         # assert versions are as expected on prod
         "forwarder_min_version": "0.3.5",
         "api_min_version": "0.3.5",
-        # This fn is public and searchable
+        # This fn is public
         "public_hello_fn_uuid": "b0a5d1a0-2b22-4381-b899-ba73321e41e0",
         # For production tests, the target endpoint should be the tutorial_endpoint
         "endpoint_uuid": "4b116d3c-1703-4f8f-9f6f-39921e5864df",
@@ -105,7 +104,6 @@ def _add_args_for_client_creds_login(api_client_id, api_client_secret, client_ar
     auth_client = ConfidentialAppAuthClient(api_client_id, api_client_secret)
     scopes = [
         "https://auth.globus.org/scopes/facd7ccc-c5f4-42aa-916b-a0e270e2c2a9/all",
-        SearchClient.scopes.all,
         AuthClient.scopes.openid,
     ]
     tokens = auth_client.oauth2_client_credentials_tokens(
@@ -113,18 +111,15 @@ def _add_args_for_client_creds_login(api_client_id, api_client_secret, client_ar
     ).by_resource_server
 
     funcx_token = tokens["funcx_service"]["access_token"]
-    search_token = tokens[SearchClient.resource_server]["access_token"]
     auth_token = tokens[AuthClient.resource_server]["access_token"]
 
     funcx_authorizer = AccessTokenAuthorizer(funcx_token)
-    search_authorizer = AccessTokenAuthorizer(search_token)
     auth_authorizer = AccessTokenAuthorizer(auth_token)
 
     try:
         from globus_compute_sdk.sdk.login_manager import LoginManagerProtocol
     except ImportError:
         client_args["fx_authorizer"] = funcx_authorizer
-        client_args["search_authorizer"] = search_authorizer
         client_args["openid_authorizer"] = auth_authorizer
     else:
 
@@ -137,9 +132,6 @@ def _add_args_for_client_creds_login(api_client_id, api_client_secret, client_ar
 
             def get_auth_client(self) -> AuthClient:
                 return AuthClient(authorizer=auth_authorizer)
-
-            def get_search_client(self) -> SearchClient:
-                return SearchClient(authorizer=search_authorizer)
 
             def get_web_client(self, *, base_url: str | None = None) -> WebClient:
                 return WebClient(base_url=base_url, authorizer=funcx_authorizer)

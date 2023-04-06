@@ -18,12 +18,18 @@ from multiprocessing.synchronize import Event as EventType
 
 import globus_compute_endpoint.endpoint.utils.config
 import pika.exceptions
+import setproctitle
 from globus_compute_common.messagepack import InvalidMessageError, pack, unpack
 from globus_compute_common.messagepack.message_types import (
+    EPStatusReport,
     Result,
     ResultErrorDetails,
     Task,
 )
+from parsl.version import VERSION as PARSL_VERSION
+
+import globus_compute_endpoint.endpoint.utils.config
+from globus_compute_sdk import __version__ as funcx_sdk_version
 from globus_compute_endpoint import __version__ as funcx_endpoint_version
 from globus_compute_endpoint.endpoint.messages_compat import (
     convert_to_internaltask,
@@ -307,6 +313,7 @@ class EndpointInterchange:
                 self._kill_event.set()
             except Exception:
                 log.error("Unhandled exception in main kernel.")
+                log.debug("Unhandled exception in main kernel.", exc_info=True)
             finally:
                 if not self._kill_event.is_set():
                     self._reconnect_fail_counter += 1
@@ -349,9 +356,7 @@ class EndpointInterchange:
         """
         log.debug("_main_loop begins")
 
-        results_publisher = ResultQueuePublisher(
-            queue_info=self.result_q_info,
-        )
+        results_publisher = ResultQueuePublisher(queue_info=self.result_q_info)
 
         with results_publisher:
             executor = list(self.executors.values())[0]
@@ -443,7 +448,7 @@ class EndpointInterchange:
 
                     try:
                         # This either works or it doesn't; if it doesn't, then
-                        # serialize an execption and send _that_
+                        # serialize an exception and send _that_
                         # will be a packed EPStatusReport or Result
                         message = try_convert_to_messagepack(packed_result)
 
@@ -471,7 +476,8 @@ class EndpointInterchange:
 
                     try:
                         results_publisher.publish(message)
-                        num_results_forwarded += 1  # Safe given GIL
+                        if task_id:
+                            num_results_forwarded += 1  # Safe given GIL
 
                     except Exception:
                         # Publishing didn't work -- quiesce and see if a simple restart
@@ -499,22 +505,90 @@ class EndpointInterchange:
             task_processor_thread.start()
             result_processor_thread.start()
 
-            log.debug("_main_loop entered running state")
             last_t, last_r = 0, 0
+
+            soft_idle_limit = max(0, self.config.idle_heartbeats_soft)
+            hard_idle_limit = max(soft_idle_limit + 1, self.config.idle_heartbeats_hard)
+            soft_idle_heartbeats = 0  # "happy path" idle timeout
+            hard_idle_heartbeats = 0  # catch-all idle timeout
+
+            live_proc_title = setproctitle.getproctitle()
+            log.debug("_main_loop entered running state")
             while not self._quiesce_event.wait(self.heartbeat_period):
                 # Possibly TOCTOU here, but we don't need to be super precise.  The
                 # point here is to mention "still alive" and that we're still working
                 num_t, num_r = num_tasks_forwarded, num_results_forwarded
+                diff_t, diff_r = num_t - last_t, num_r - last_r
                 log.debug(
                     "Heartbeat.  Approximate Tasks and Results forwarded since last "
                     "heartbeat: %s (T), %s (R)",
-                    num_t - last_t,
-                    num_r - last_r,
+                    diff_t,
+                    diff_r,
                 )
                 last_t, last_r = num_t, num_r
 
                 # only reset come heartbeat and still alive
                 self._reconnect_fail_counter = 0
+
+                if not soft_idle_limit:
+                    # idle timeout not enabled; "always on"
+                    continue
+
+                if diff_t or diff_r:
+                    # a task moved; reset idle heartbeat counter
+                    if soft_idle_heartbeats or hard_idle_heartbeats:
+                        log.info(
+                            "Moved to active state (due to tasks processed since"
+                            " last heartbeat)."
+                        )
+                    setproctitle.setproctitle(live_proc_title)
+                    soft_idle_heartbeats = 0
+                    hard_idle_heartbeats = 0
+                    continue
+
+                # only start "timer" if we've at least done *some* work
+                hard_idle_heartbeats += 1
+                if (num_t or num_r) and num_r >= num_t:
+                    # similar to above, only start "timer" if *idle* ... but
+                    # note that given self.result_store, it's possible to
+                    # have forwarded more results than tasks received.
+                    soft_idle_heartbeats += 1
+                    shutdown_s = soft_idle_limit - soft_idle_heartbeats
+                    shutdown_s *= self.heartbeat_period
+
+                    if soft_idle_heartbeats == 1:
+                        log.info(
+                            "In idle state (due to no task or result movement);"
+                            f" shut down in {shutdown_s:,}s.  (idle_heartbeats_soft)"
+                        )
+                    idle_proc_title = "[idle; shut down in {:,}s] {}"
+                    setproctitle.setproctitle(
+                        idle_proc_title.format(shutdown_s, live_proc_title)
+                    )
+
+                    if soft_idle_heartbeats >= soft_idle_limit:
+                        log.info("Idle heartbeats reached.  Shutting down.")
+                        self.time_to_quit = True
+                        self.stop()
+
+                elif hard_idle_heartbeats > hard_idle_limit:
+                    log.warning("Shutting down due to idle heartbeats HARD limit.")
+                    self.time_to_quit = True
+                    self.stop()
+
+                elif hard_idle_heartbeats > soft_idle_limit:
+                    shutdown_s = hard_idle_limit - hard_idle_heartbeats
+                    shutdown_s *= self.heartbeat_period
+                    if hard_idle_heartbeats == soft_idle_limit + 1:
+                        # only log the first time; no sense in filling logs
+                        log.info(
+                            "Possibly idle -- no task or result movement.  Will"
+                            f" shut down in {shutdown_s:,}s.  (idle_heartbeats_hard)"
+                        )
+                    idle_proc_title = "[possibly idle; shut down in {:,}s] {}"
+                    setproctitle.setproctitle(
+                        idle_proc_title.format(shutdown_s, live_proc_title)
+                    )
 
             # The timeouts aren't nominally necessary because if the above loop has
             # quit, then the _quiesce_event is set, and both threads check that event
@@ -522,3 +596,14 @@ class EndpointInterchange:
             stored_processor_thread.join(timeout=5)
             task_processor_thread.join(timeout=5)
             result_processor_thread.join(timeout=5)
+
+            # let higher-level error handling take over if the following excepts
+            message = EPStatusReport(
+                endpoint_id=self.endpoint_id,
+                # 0 == "no more heartbeats coming"
+                global_state={"heartbeat_period": 0},
+                task_statuses={},
+            )
+            results_publisher.publish(pack(message))
+
+            log.debug("_main_loop exits")

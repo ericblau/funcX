@@ -199,16 +199,6 @@ class Client:
         else:
             self.loop = None
 
-        # TODO: remove this
-        self._searcher = None
-
-    @property
-    def searcher(self):
-        # TODO: remove this
-        if self._searcher is None:
-            self._searcher = SearchHelper(self.login_manager.get_search_client())
-        return self._searcher
-
     def version_check(self, endpoint_version: str | None = None) -> None:
         """Check this client version meets the service's minimum supported version.
 
@@ -612,7 +602,7 @@ class Client:
         description=None,
         public=False,
         group=None,
-        searchable=True,
+        searchable=None,
     ) -> str:
         """Register a function code with the Globus Compute service.
 
@@ -634,11 +624,19 @@ class Client:
             If true, the function will be indexed into globus search with the
             appropriate permissions
 
+            DEPRECATED - ingesting functions to Globus Search is not currently supported
+
         Returns
         -------
         function uuid : str
             UUID identifier for the registered function
         """
+        if searchable is not None:
+            warnings.warn(
+                "The 'searchable' argument is deprecated and no longer functional. "
+                "It will be removed in a future release."
+            )
+
         data = FunctionRegistrationData(
             function=function,
             container_uuid=container_uuid,
@@ -646,7 +644,6 @@ class Client:
             description=description,
             public=public,
             group=group,
-            searchable=searchable,
             serializer=self.fx_serializer,
         )
         logger.info(f"Registering function : {data}")

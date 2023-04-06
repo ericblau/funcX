@@ -7,7 +7,7 @@ import threading
 import typing as t
 
 import globus_sdk
-from globus_sdk.scopes import AuthScopes, ScopeBuilder, SearchScopes
+from globus_sdk.scopes import AuthScopes, ScopeBuilder
 
 from ..web_client import WebClient
 from .client_login import get_client_login, is_client_login
@@ -59,7 +59,6 @@ class LoginManager:
     SCOPES: dict[str, list[str]] = {
         ComputeScopes.resource_server: [ComputeScopes.all],
         AuthScopes.resource_server: [AuthScopes.openid],
-        SearchScopes.resource_server: [SearchScopes.all],
     }
 
     def __init__(self, *, environment: str | None = None) -> None:
