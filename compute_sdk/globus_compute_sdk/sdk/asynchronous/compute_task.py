@@ -21,7 +21,7 @@ class ComputeTask(asyncio.Future):
 
     async def get_result(self):
         """
-        Coroutine to wait on the Globus Compute task to complete and then
+        Coroutine waiting for the Globus Compute task to complete and then
         return the result
 
         :return:

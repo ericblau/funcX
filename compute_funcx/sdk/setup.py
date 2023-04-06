@@ -3,10 +3,8 @@ import re
 
 from setuptools import find_packages, setup
 
-compute_sdk_path = "/Users/lei/glob/funcX/compute_sdk"
-
 REQUIRES = [
-    "globus-compute-sdk>=2.0.0a1",
+    "globus-compute-sdk>=2.0.1",
 ]
 
 
@@ -29,7 +27,7 @@ setup(
     name="funcx",
     version=parse_version(),
     packages=find_packages(),
-    description="funcX: High Performance Function Serving for Science",
+    description="Globus Compute: High Performance Function Serving for Science",
     install_requires=REQUIRES,
     extras_require={},
     python_requires=">=3.7",
@@ -42,9 +40,9 @@ setup(
         "Programming Language :: Python :: 3",
         "Topic :: Scientific/Engineering",
     ],
-    keywords=["funcX", "FaaS", "Function Serving"],
-    author="funcX team",
-    author_email="labs@globus.org",
+    keywords=["funcX", "FaaS", "Function Serving", "Globus Compute"],
+    author="The Globus Compute Team",
+    author_email="support@globus.org",
     license="Apache License, Version 2.0",
     url="https://github.com/funcx-faas/funcx",
 )

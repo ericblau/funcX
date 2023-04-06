@@ -371,7 +371,7 @@ def _upgrade_funcx_imports_in_config(name: str, force=False) -> str:
         raise ClickException(msg) from err
 
 
-def read_config(endpoint_dir: pathlib.Path, warn_funcx_imports: bool = True) -> Config:
+def read_config(endpoint_dir: pathlib.Path) -> Config:
     endpoint_name = endpoint_dir.name
 
     try:
@@ -416,7 +416,7 @@ def read_config(endpoint_dir: pathlib.Path, warn_funcx_imports: bool = True) -> 
 
     except ModuleNotFoundError as err:
         # Catch specific error when old config.py references funcx_endpoint
-        if warn_funcx_imports and "No module named 'funcx_endpoint." in err.msg:
+        if "No module named 'funcx_endpoint." in err.msg:
             msg = (
                 f"{conf_path} contains import statements from a previously "
                 "configured endpoint that uses the (deprecated) "

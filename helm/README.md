@@ -154,7 +154,7 @@ The deployment is configured via values.yaml file.
 | image.pullPolicy | Pod pull policy for the endpoint image |  Always |
 | workerDebug | Log additional information in the worker logs | False |
 | workerImage | Docker image to run in the worker pods |  python:3.6-buster |
-| workerInit | Command to execute on worker before strating uip | pip install parsl==0.9.0;pip install --force-reinstall globus-compute-sdk>=2.0.0 |
+| workerInit | Command to execute on worker before strating uip | pip install parsl==0.9.0;pip install --force-reinstall globus-compute-sdk>=2.0.1 |
 | workerNamespace | Kubernetes namespace to launch worker pods into | default |
 | workingDir | Directory inside the container where log files are to be stored | /tmp/worker_logs |
 | rbacEnabled | Create service account and roles? | true |

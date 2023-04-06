@@ -133,8 +133,6 @@ class Endpoint:
             f"\n    Configuration file: {config_path}\n"
             "\nUse the `start` subcommand to run it:\n"
             f"\n    $ globus-compute-endpoint start {ep_name}"
-            # If we want to show 'funcx-endpoint start' when using the wrapper
-            # f"\n    $ {sys.argv[0]} start {ep_name}"
         )
 
     @staticmethod

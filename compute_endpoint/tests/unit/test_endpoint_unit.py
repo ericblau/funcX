@@ -90,8 +90,6 @@ def mock_ep_data(fs):
 @pytest.fixture
 def mock_ep_buf():
     buf = io.StringIO()
-    # Endpoint.get_endpoint
-    # ep = mocker.patch("globus_compute_endpoint.endpoint.endpoint.Endpoint.get_endpoints")  # noqa: E501
     Endpoint.get_endpoints = mock.Mock()
     Endpoint.get_endpoints.return_value = {}
 
