@@ -6,8 +6,7 @@ interface to allow functions to be used in a `Globus Flow <https://www.globus.or
 
 The Globus Compute Action Provider interface uses:
 
-* ``ActionUrl`` -- 'https://automate.funcx.org'
-* ``ActionScope`` -- 'https://auth.globus.org/scopes/b3db7e59-a6f1-4947-95c2-59d6b7a70f8c/action_all'
+* ``ActionUrl`` -- 'https://compute2.dev.funcx.org'
 
 
 Action Input Schema

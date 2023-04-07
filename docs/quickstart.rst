@@ -31,6 +31,7 @@ This should return a version string, for example: ``"1.0.5"``
 .. note:: The Globus Compute client is supported on MacOS, Linux, and Windows. The globus-compute-endpoint
    is only supported on Linux.
 
+.. _install_gc_sdk:
 Installing Globus Compute in a Virtual Environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -47,6 +48,7 @@ for reliable installation to avoid python package dependency conflicts.
 
     (globus_compute_venv) $ python3 -m pip install -U globus-compute-sdk
 
+.. _install_gc_endpoint:
 2. (Optional) The Globus Compute endpoint can be installed using `Pipx <https://pypa.github.io/pipx/installation/>`_ or using pip in the venv::
 
      $ python3 -m pipx install globus-compute-endpoint
