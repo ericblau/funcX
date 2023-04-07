@@ -416,7 +416,7 @@ def read_config(endpoint_dir: pathlib.Path) -> Config:
 
     except ModuleNotFoundError as err:
         # Catch specific error when old config.py references funcx_endpoint
-        if "No module named 'funcx_endpoint." in err.msg:
+        if "No module named 'funcx_endpoint" in err.msg:
             msg = (
                 f"{conf_path} contains import statements from a previously "
                 "configured endpoint that uses the (deprecated) "
