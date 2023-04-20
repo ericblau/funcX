@@ -9,11 +9,11 @@ from __future__ import annotations
 import concurrent.futures
 import ipaddress
 import logging
-import multiprocessing
 import os
 import queue
 import threading
 import time
+import uuid
 from multiprocessing import Process
 
 import daemon
@@ -314,7 +314,7 @@ class HighThroughputExecutor(RepresentationMixin):
         self.outgoing_q: zmq_pipes.TasksOutgoing | None = None
         self.incoming_q: zmq_pipes.ResultsIncoming | None = None
         self.command_client: zmq_pipes.CommandClient | None = None
-        self.results_passthrough: multiprocessing.Queue | None = None
+        self.results_passthrough: queue.Queue | None = None
         self._queue_management_thread: threading.Thread | None = None
 
         self.is_alive = False
@@ -352,8 +352,20 @@ class HighThroughputExecutor(RepresentationMixin):
                 "--container_image={container_image} "
             )
 
-    def start(self, results_passthrough: multiprocessing.Queue = None):
+    def start(
+        self,
+        *args,
+        endpoint_id: uuid.UUID | None = None,
+        run_dir: str | None = None,
+        results_passthrough: queue.Queue[dict[str, bytes | str | None]] | None = None,
+        **kwargs,
+    ):
         """Create the Interchange process and connect to it."""
+        assert run_dir, "GCExecutor requires kwarg:run_dir at start"
+        assert endpoint_id, "GCExecutor requires kwarg:endpoint_id at start"
+        self.run_dir = run_dir
+        self.endpoint_id = endpoint_id
+
         self.outgoing_q = zmq_pipes.TasksOutgoing(
             "127.0.0.1", self.interchange_port_range
         )

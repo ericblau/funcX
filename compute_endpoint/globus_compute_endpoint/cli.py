@@ -19,6 +19,7 @@ from globus_compute_endpoint.version import DEPRECATION_FUNCX_ENDPOINT
 from globus_compute_sdk.sdk.login_manager import LoginManager
 from globus_compute_sdk.sdk.login_manager.tokenstore import ensure_compute_dir
 from globus_compute_sdk.sdk.login_manager.whoami import print_whoami_info
+from packaging.version import Version
 
 log = logging.getLogger(__name__)
 
@@ -365,6 +366,19 @@ def read_config(endpoint_dir: pathlib.Path) -> Config:
     endpoint_name = endpoint_dir.name
 
     try:
+        import funcx_endpoint
+
+        if Version(funcx_endpoint.__version__) < Version("2.0.0"):
+            msg = (
+                "To avoid compatibility issues with Globus Compute, please uninstall "
+                "funcx-endpoint or upgrade funcx-endpoint to >=2.0.0. Note that the "
+                "funcx-endpoint package is now deprecated."
+            )
+            raise ClickException(msg)
+    except ModuleNotFoundError:
+        pass
+
+    try:
         conf_path = endpoint_dir / "config.py"
         spec = importlib.util.spec_from_file_location("config", conf_path)
         if not (spec and spec.loader):
@@ -428,7 +442,7 @@ def read_config(endpoint_dir: pathlib.Path) -> Config:
 
     except Exception:
         log.exception(
-            "Globus Compute v0.2.0 made several non-backwards compatible changes to "
+            "Globus Compute v2.0.0 made several non-backwards compatible changes to "
             "the config. Your config might be out of date. "
             "Refer to "
             "https://funcx.readthedocs.io/en/latest/endpoints.html#configuring-funcx"
