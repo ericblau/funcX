@@ -415,9 +415,6 @@ class EndpointInterchange:
                         task_id: str | None = result["task_id"]
                         packed_result: bytes = result["message"]
 
-                        if not task_id:
-                            raise AssertionError("task_id: empty or None")
-
                     except queue.Empty:
                         # Empty queue!  Let's see if we have any prior results to send
                         continue
@@ -435,6 +432,13 @@ class EndpointInterchange:
                         message = try_convert_to_messagepack(packed_result)
 
                     except Exception as exc:
+                        if not task_id:
+                            log.exception(
+                                "Unable to parse result message; no task id, so"
+                                " likely a garbled EPStatusReport; ignoring"
+                            )
+                            continue
+
                         log.exception(
                             f"Unable to parse result message for task {task_id}."
                             "   Marking task as failed."
@@ -585,7 +589,14 @@ class EndpointInterchange:
             message = EPStatusReport(
                 endpoint_id=self.endpoint_id,
                 # 0 == "no more heartbeats coming"
-                global_state={"heartbeat_period": 0},
+                global_state={
+                    "managers": 0,
+                    "total_workers": 0,
+                    "idle_workers": 0,
+                    "pending_tasks": 0,
+                    "outstanding_tasks": {},
+                    "heartbeat_period": 0,
+                },
                 task_statuses={},
             )
             results_publisher.publish(pack(message))

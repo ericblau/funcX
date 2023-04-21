@@ -11,6 +11,9 @@ from globus_compute_common.messagepack.message_types import EPStatusReport, Resu
 from globus_compute_endpoint.endpoint.endpoint import Endpoint
 from globus_compute_endpoint.endpoint.interchange import EndpointInterchange, log
 from globus_compute_endpoint.endpoint.utils.config import Config
+from globus_compute_endpoint.executors.high_throughput.messages import (
+    EPStatusReport as HTEPStatusReport,
+)
 from tests.utils import try_for_timeout
 
 _MOCK_BASE = "globus_compute_endpoint.endpoint.interchange."
@@ -26,6 +29,11 @@ def funcx_dir(tmp_path):
 @pytest.fixture(autouse=True)
 def reset_signals_auto(reset_signals):
     yield
+
+
+@pytest.fixture(autouse=True)
+def mock_spt(mocker):
+    yield mocker.patch(f"{_MOCK_BASE}setproctitle.setproctitle")
 
 
 def test_endpoint_id(funcx_dir):
@@ -83,7 +91,6 @@ def test_invalid_task_received(mocker, endpoint_uuid):
 
 
 def test_invalid_result_received(mocker, endpoint_uuid):
-    mocker.patch(f"{_MOCK_BASE}setproctitle.setproctitle")
     mock_rqp = mocker.MagicMock()
     mocker.patch(f"{_MOCK_BASE}ResultQueuePublisher", return_value=mock_rqp)
 
@@ -155,8 +162,7 @@ def test_die_with_parent_goes_away_if_parent_dies(mocker):
     assert f"Parent ({ppid}) has gone away" in warn_msg
 
 
-def test_no_idle_if_not_configured(mocker, endpoint_uuid):
-    mock_spt = mocker.patch(f"{_MOCK_BASE}setproctitle.setproctitle")
+def test_no_idle_if_not_configured(mocker, endpoint_uuid, mock_spt):
     mock_log = mocker.patch(f"{_MOCK_BASE}log")
     mocker.patch(f"{_MOCK_BASE}ResultQueuePublisher")
 
@@ -179,8 +185,7 @@ def test_no_idle_if_not_configured(mocker, endpoint_uuid):
     assert not mock_spt.called
 
 
-def test_soft_idle_honored(mocker, endpoint_uuid):
-    mock_spt = mocker.patch(f"{_MOCK_BASE}setproctitle.setproctitle")
+def test_soft_idle_honored(mocker, endpoint_uuid, mock_spt):
     mock_log = mocker.patch(f"{_MOCK_BASE}log")
     mocker.patch(f"{_MOCK_BASE}ResultQueuePublisher")
 
@@ -216,8 +221,7 @@ def test_soft_idle_honored(mocker, endpoint_uuid):
     assert num_updates > 1, "expect process title reflects idle status and is updated"
 
 
-def test_hard_idle_honored(mocker, endpoint_uuid):
-    mock_spt = mocker.patch(f"{_MOCK_BASE}setproctitle.setproctitle")
+def test_hard_idle_honored(mocker, endpoint_uuid, mock_spt):
     mock_log = mocker.patch(f"{_MOCK_BASE}log")
     mocker.patch(f"{_MOCK_BASE}ResultQueuePublisher")
 
@@ -253,8 +257,7 @@ def test_hard_idle_honored(mocker, endpoint_uuid):
     assert num_updates > 1, "expect process title reflects idle status and is updated"
 
 
-def test_unidle_updates_proc_title(mocker, endpoint_uuid):
-    mock_spt = mocker.patch(f"{_MOCK_BASE}setproctitle.setproctitle")
+def test_unidle_updates_proc_title(mocker, endpoint_uuid, mock_spt):
     mock_log = mocker.patch(f"{_MOCK_BASE}log")
     mocker.patch(f"{_MOCK_BASE}ResultQueuePublisher")
 
@@ -290,7 +293,6 @@ def test_unidle_updates_proc_title(mocker, endpoint_uuid):
 
 
 def test_sends_final_status_message_on_shutdown(mocker, endpoint_uuid):
-    mocker.patch(f"{_MOCK_BASE}setproctitle.setproctitle")
     mock_rqp = mocker.MagicMock()
     mocker.patch(f"{_MOCK_BASE}ResultQueuePublisher", return_value=mock_rqp)
 
@@ -313,3 +315,35 @@ def test_sends_final_status_message_on_shutdown(mocker, endpoint_uuid):
     assert isinstance(epsr, EPStatusReport)
     assert epsr.endpoint_id == uuid.UUID(endpoint_uuid)
     assert epsr.global_state["heartbeat_period"] == 0
+
+
+def test_faithfully_handles_status_report_messages(mocker, endpoint_uuid, randomstring):
+    mock_rqp = mocker.MagicMock()
+    mocker.patch(f"{_MOCK_BASE}ResultQueuePublisher", return_value=mock_rqp)
+
+    conf = Config(
+        executors=[mocker.Mock(endpoint_id=endpoint_uuid)],
+        heartbeat_period=0.01,
+    )
+    ei = EndpointInterchange(
+        endpoint_id=endpoint_uuid,
+        config=conf,
+        reg_info={"task_queue_info": {}, "result_queue_info": {}},
+    )
+
+    epsr = HTEPStatusReport(endpoint_uuid, {"sentinel": randomstring()}, {})
+    msg = {"task_id": None, "message": pickle.dumps(epsr)}
+    ei.results_passthrough.put(msg)
+    t = threading.Thread(target=ei._main_loop, daemon=True)
+    t.start()
+
+    try_for_timeout(lambda: mock_rqp.publish.called, timeout_ms=1000)
+    ei.time_to_quit = True
+    t.join()
+
+    assert mock_rqp.publish.call_count > 1, "One sentinel packet, one 'closing' packet"
+    packed_bytes = mock_rqp.publish.call_args_list[0][0][0]
+    found_epsr = unpack(packed_bytes)
+    assert isinstance(found_epsr, EPStatusReport)
+    assert found_epsr.endpoint_id == uuid.UUID(endpoint_uuid)
+    assert found_epsr.global_state["sentinel"] == epsr.global_state["sentinel"]
