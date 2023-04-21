@@ -79,13 +79,50 @@ def test_ensure_compute_dir(fs, legacy_dir_exists, dir_exists):
         assert legacy_dirname.is_symlink()
 
 
+@pytest.mark.parametrize("user_dir_exists", [True, False])
+def test_ensure_compute_user_dir(fs, user_dir_exists):
+    user_dirname = pathlib.Path("/my/custom/dir")
+
+    if user_dir_exists:
+        fs.create_dir(user_dirname)
+
+        with mock.patch.dict(
+            os.environ, {"GLOBUS_COMPUTE_USER_DIR": str(user_dirname)}
+        ):
+            dirname = ensure_compute_dir()
+
+        assert dirname.is_dir()
+        assert dirname == user_dirname
+
+    else:
+        with pytest.raises(FileNotFoundError):
+            with mock.patch.dict(
+                os.environ, {"GLOBUS_COMPUTE_USER_DIR": str(user_dirname)}
+            ):
+                ensure_compute_dir()
+
+
 def test_conflicting_compute_file(fs):
     filename = pathlib.Path.home() / ".globus_compute"
     fs.create_file(filename)
 
     with pytest.raises(FileExistsError) as exc:
         ensure_compute_dir()
+
     assert "Error creating directory" in str(exc)
+
+
+def test_conflicting_compute_user_file(fs):
+    user_filename = pathlib.Path("/my/user/dir")
+    fs.create_file(user_filename)
+
+    with pytest.raises(FileExistsError) as exc:
+        with mock.patch.dict(
+            os.environ, {"GLOBUS_COMPUTE_USER_DIR": str(user_filename)}
+        ):
+            ensure_compute_dir()
+
+    assert "must be a directory" in str(exc)
 
 
 def test_is_client_login():

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import pathlib
 import shlex
 from unittest import mock
@@ -90,10 +91,36 @@ def run_line(cli_runner):
     return func
 
 
-def test_init_config_dir(fs):
-    home_dir = pathlib.Path.home()
-    config_dir = init_config_dir()
-    assert config_dir == home_dir / ".globus_compute"
+@pytest.mark.parametrize("dir_exists", [True, False])
+def test_init_config_dir(fs, dir_exists):
+    config_dirname = pathlib.Path.home() / ".globus_compute"
+
+    if dir_exists:
+        fs.create_dir(config_dirname)
+
+    dirname = init_config_dir()
+    assert dirname == config_dirname
+
+
+@pytest.mark.parametrize("dir_exists", [True, False])
+def test_init_config_user_dir(fs, dir_exists):
+    user_dirname = pathlib.Path("/my/user/dir")
+
+    if dir_exists:
+        fs.create_dir(user_dirname)
+
+        with mock.patch.dict(
+            os.environ, {"GLOBUS_COMPUTE_USER_DIR": str(user_dirname)}
+        ):
+            dirname = init_config_dir()
+        assert dirname == user_dirname
+
+    else:
+        with pytest.raises(ClickException):
+            with mock.patch.dict(
+                os.environ, {"GLOBUS_COMPUTE_USER_DIR": str(user_dirname)}
+            ):
+                init_config_dir()
 
 
 def test_init_config_dir_file_conflict(fs):
@@ -102,7 +129,19 @@ def test_init_config_dir_file_conflict(fs):
 
     with pytest.raises(ClickException) as exc:
         init_config_dir()
+
     assert "Error creating directory" in str(exc)
+
+
+def test_init_config_user_dir_file_conflict(fs):
+    filename = pathlib.Path("/my/user/dir")
+    fs.create_file(filename)
+
+    with mock.patch.dict(os.environ, {"GLOBUS_COMPUTE_USER_DIR": str(filename)}):
+        with pytest.raises(ClickException) as exc:
+            init_config_dir()
+
+    assert "must be a directory" in str(exc)
 
 
 def test_start_ep_corrupt(run_line, mock_cli_state, make_endpoint_dir):

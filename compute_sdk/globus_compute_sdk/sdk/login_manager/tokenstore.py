@@ -36,22 +36,31 @@ def invalidate_old_config() -> None:
 
 
 def ensure_compute_dir() -> pathlib.Path:
+    user_dirname_str = os.getenv("GLOBUS_COMPUTE_USER_DIR")
+    if user_dirname_str:
+        user_dirname = pathlib.Path(user_dirname_str)
+        if user_dirname.is_dir():
+            return user_dirname
+        elif user_dirname.is_file():
+            raise FileExistsError(f"{user_dirname} must be a directory, not a file")
+        else:
+            raise FileNotFoundError(
+                f"{user_dirname} could not be found on the file system"
+            )
+
     legacy_dirname = _home() / ".funcx"
     dirname = _home() / ".globus_compute"
 
     if dirname.is_dir():
         pass
-
     elif dirname.is_file():
         raise FileExistsError(
             f"Error creating directory {dirname}, "
             "please remove or rename the conflicting file"
         )
-
     elif legacy_dirname.is_dir():
         legacy_dirname.replace(dirname)
         legacy_dirname.symlink_to(dirname, target_is_directory=True)
-
     else:
         dirname.mkdir(mode=0o700, parents=True, exist_ok=True)
 
